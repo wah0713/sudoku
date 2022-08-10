@@ -1,130 +1,97 @@
+// 1-9
 const defaultNum = Array(9).fill(null).map((item, index) => {
     return index + 1
 })
+
 const arr = []
-let optionalList36 = []
-arr[0] = [...defaultNum].sort(() => Math.random() - 0.5)
-for (let i = 1; i < 5; i++) {
-    arr[i] = []
-    for (let j = 0; j < 9; j++) {
-        let currentList = []
-        const filterList = new Set()
-        const selectedLeftList = []
-        const rigthTopList = []
-        // 向上
-        for (let x = 0; x < i; x++) {
-            filterList.add(arr[x][j])
-        }
-        // 向左
-        for (let y = 0; y < j; y++) {
-            filterList.add(arr[i][y])
-            selectedLeftList.push(arr[i][y])
-        }
 
-        const areaX = Math.floor(i / 3) * 3
-        const areaY = Math.floor(j / 3) * 3
-        // 同一个盒子
-        for (let n = areaX; n < areaX + 3; n++) {
-            for (let m = areaY; m < areaY + 3; m++) {
-                const item = arr[n] && arr[n][m] || null
-                item && filterList.add(item)
-            }
+const getOptionalList = (i, j) => {
+    const filterList = new Set()
+    // 向上
+    for (let x = 0; x < i; x++) {
+        filterList.add(arr[x][j])
+    }
+    // 一行
+    for (let y = 0; y < 9; y++) {
+        filterList.add(arr[i][y])
+    }
+
+    const areaX = Math.floor(i / 3) * 3
+    const areaY = Math.floor(j / 3) * 3
+    // 同一个盒子
+    for (let n = areaX; n < areaX + 3; n++) {
+        for (let m = areaY; m < areaY + 3; m++) {
+            const item = arr[n] && arr[n][m] || null
+            item && filterList.add(item)
         }
+    }
 
-        // 中间
-        if (areaY === 3 && (i % 3 !== 0)) {
-            for (let t = 6; t < 9; t++) {
-                rigthTopList.push(arr[i - 1][t])
-            }
-            const surplusList = rigthTopList.filter(item => !selectedLeftList.includes(item))
-            if (surplusList.length <= (6 - j)) {
-                currentList = surplusList
-            }
+    // 当前位置可选值
+    return defaultNum.filter(item => !filterList.has(item))
+}
+
+// 找出拥有最小可选值的index
+findMinIndex = (list) => {
+    let idx = -1
+    let min = 10
+    list.forEach((item, index) => {
+        const length = item.length
+        if (length === 0) return false
+
+        if (Math.min(length, min) === length) {
+            min = length
+            idx = index
         }
+    })
+    return idx
+}
 
-        // 当前位置可选值
-        const optionalList = (currentList.length > 0 ? currentList : defaultNum).filter(item => !filterList.has(item))
+// 总失误数
+let errNum = 0
 
-        if (i === 3 && j === 6) {
-            temp = []
-            for (let t = 0; t < 6; t++) {
-                temp.push(arr[i][t])
-            }
-            optionalList36 = defaultNum.filter(item => !temp.includes(item))
-            console.log(`optionalList36`, optionalList36)
+// 递归
+const walk = (i) => {
+    // 可选的组成的数组
+    let list = []
+    // 这一列完成的数量
+    let completeNum = 0
+
+    for (let o = 0; o < 9; o++) {
+        if (arr[i][o]) {
+            list[o] = []
+            completeNum++
+        } else {
+            list[o] = getOptionalList(i, o)
         }
-        // 后面
-        let flag = true
-        if (j === 6 && i === 3) {
-            const func = (i, j, limt = 1) => {
-                const temp = []
-                let f = []
-                for (let t = 0; t < i; t++) {
-                    temp.push(arr[t][j])
-                }
-                f = optionalList36.filter(item => !temp.includes(item))
-                console.log(`f`, f)
-                if (f.length <= limt && !arr[i][j]) {
-                    arr[i][j] = f[0]
-                    optionalList36 = optionalList36.filter(item => item !== arr[i][j])
-                    console.log(`optionalList36`, optionalList36)
-                    flag = false
-                    return true
-                }
-                return false
-            }
-            const res = func(i, j)
-            if (res) {
-                if (func(i, j + 2)) {
-                    func(i, j + 1)
-                } else {
-                    func(i, j + 1, 2)
-                    func(i, j + 2, 2)
-                }
+    }
 
-            }
-            if (flag) {
-                const res = func(i, j + 1)
-                if (res) {
-                    if (func(i, j + 2)) {
-                        func(i, j)
-                    } else {
-                        func(i, j, 2)
-                        func(i, j + 2, 2)
-                    }
-                }
-                if (flag) {
-                    const res = func(i, j + 2)
-                    if (res) {
-                        if (func(i, j + 1)) {
-                            func(i, j)
-                        } else {
-                            func(i, j, 2)
-                            func(i, j + 1, 2)
-                        }
-                    }
-                }
-            }
-            func(i, j, 2)
-            func(i, j + 1, 1)
-            func(i, j + 2, 2)
-            func(i, j + 1, 1)
-            flag = false
-            console.log([...arr])
-        } else if (j >= 7 && i === 3) {
-            flag = false
+    // 找出拥有最小可选值的index
+    const index = findMinIndex(list)
+
+    if (index === -1) {
+        console.table(arr)
+        errNum++
+        if (errNum === 9) {
+            // 防止死循环
+            throw new Error('try again')
         }
-
-        if (!arr[i][j] && flag) {
-            arr[i][j] = optionalList.sort(() => Math.random() - 0.5)[0]
-        }
-        // if (!arr[i][j]) {
-        //     console.log(`filterList`, filterList);
-        //     console.log(`currentList`, currentList)
-        //     console.log(arr)
-        // }
-
+        // 清空这一列
+        arr[i] = []
+    } else {
+        arr[i][index] = list[index].sort(() => Math.random() - 0.5)[0]
+        completeNum++
+    }
+    // 为满足条件，则重新递归
+    if (completeNum < 9) {
+        walk(i)
     }
 }
-console.log(`____`, )
-console.log(arr)
+
+arr[0] = [...defaultNum].sort(() => Math.random() - 0.5)
+
+for (let i = 1; i < 2; i++) {
+    arr[i] = []
+    walk(i)
+}
+console.info(`success✔️`)
+console.table(arr)
