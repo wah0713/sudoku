@@ -13,7 +13,7 @@ const getOptionalList = (i, j) => {
     }
     // 一行
     for (let y = 0; y < 9; y++) {
-        filterList.add(arr[i][y])
+        arr[i][y] && filterList.add(arr[i][y])
     }
 
     const areaX = Math.floor(i / 3) * 3
@@ -89,7 +89,7 @@ const walk = (i) => {
 
 arr[0] = [...defaultNum].sort(() => Math.random() - 0.5)
 
-for (let i = 1; i < 2; i++) {
+for (let i = 1; i < 9; i++) {
     arr[i] = []
     walk(i)
 }
